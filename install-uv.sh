@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 set -eu -o pipefail
 
-script_path=$(realpath "${BASH_SOURCE[0]}")
-script_dir=$(dirname "$script_path")
-readonly uv_install_dir="${script_dir}/.uv"
-
-uv_version="latest"
+uv_version=${INSTALL_UV_TARGET_VERSION:-"latest"}
+base_dir=${INSTALL_UV_BASE_DIR:-$(pwd)}
+readonly uv_install_dir="${base_dir}/.uv"
 
 usage=$(
   cat <<__EOS
 Description: Install uv and generate pycmd
-Usage: "./$(basename "${script_path}")" [options]
+Usage: "install-uv.sh [options]
 
 Options:
   -h  Show help
@@ -83,7 +81,7 @@ fi
 # 任意のコマンドを pycmd の引数に渡すことでこの環境下で動作する
 #
 
-cat <<'__EOF__' >| "${script_dir}"/pycmd
+cat <<'__EOF__' >| "${base_dir}"/pycmd
 #!/usr/bin/env bash
 set -eu -o pipefail -o pipefail
 
@@ -94,14 +92,14 @@ readonly prog_name
 
 declare -a additional_paths=()
 __EOF__
-cat <<__EOF__ >> "${script_dir}/pycmd"
-export XDG_CONFIG_HOME="${script_dir}/.config"
-export XDG_CACHE_HOME="${script_dir}/.cache"
-export XDG_DATA_HOME="${script_dir}/.local/share"
-export XDG_BIN_HOME="${script_dir}/.local/bin"
+cat <<__EOF__ >> "${base_dir}/pycmd"
+export XDG_CONFIG_HOME="${base_dir}/.config"
+export XDG_CACHE_HOME="${base_dir}/.cache"
+export XDG_DATA_HOME="${base_dir}/.local/share"
+export XDG_BIN_HOME="${base_dir}/.local/bin"
 additional_paths+=( "${uv_install_dir}/bin" )
 __EOF__
-cat <<'__EOF__' >> "${script_dir}/pycmd"
+cat <<'__EOF__' >> "${base_dir}/pycmd"
 additional_paths+=( "${XDG_BIN_HOME}" )
 joined_path=$(IFS=:; echo "${additional_paths[*]}")
 export PATH="${joined_path}:$PATH"
@@ -109,12 +107,12 @@ export PATH="${joined_path}:$PATH"
 usage=$(
   cat <<__EOS
 Description: ローカルで完結した uv 環境を利用するためのコマンド
-Usage: "./${prog_name}" -- [command] [args...]
+Usage: "${prog_name}" -- [command] [args...]
 
 e.g.
-  "./${prog_name}" -- uv --version
-  "./${prog_name}" -- uv --help
-  "./${prog_name}" -- uv run python -V
+  "${prog_name}" -- uv --version
+  "${prog_name}" -- uv --help
+  "${prog_name}" -- uv run python -V
 __EOS
 )
 
@@ -122,7 +120,7 @@ __EOS
 while getopts h OPT; do
   case "$OPT" in
     h) echo "$usage"; exit 0 ;;
-    *) echo "Unknown option: -$OPTARG" >&2; exit 1 ;; # 不正なオプション (OPT = ?)
+    *) echo "Unknown option: -$OPTARG" >&2; exit 1 ;;
   esac
 done
 shift $((OPTIND - 1))
@@ -130,6 +128,6 @@ shift $((OPTIND - 1))
 eval "$(printf "%q " "$@")"
 __EOF__
 
-chmod +x "${script_dir}/pycmd"
+chmod +x "${base_dir}/pycmd"
 
-echo "Generated pycmd at ${script_dir}/pycmd"
+echo "Generated pycmd at ${base_dir}/pycmd"
