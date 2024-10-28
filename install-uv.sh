@@ -125,7 +125,7 @@ while getopts h OPT; do
 done
 shift $((OPTIND - 1))
 
-eval "$(printf "%q " "$@")"
+exec "$@"
 __EOF__
 
 chmod +x "${base_dir}/pycmd"
