@@ -1,0 +1,25 @@
+name: Lint Shell
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+defaults:
+  run:
+    shell: bash -eux -o pipefail {0}
+jobs:
+  shfmt:
+    runs-on: ["ubuntu-latest"]
+    steps:
+      - uses: pollenjp/setup-shfmt@v1
+      - uses: actions/checkout@v4
+      - name: Run shfmt
+        run: shfmt -d .
+  shellcheck:
+    runs-on: ["ubuntu-latest"]
+    steps:
+      - uses: pollenjp/setup-shfmt@v1
+      - uses: pollenjp/setup-shellcheck@v1
+      - uses: actions/checkout@v4
+      - name: Run shellcheck
+        run: shfmt -f . | xargs -d '\n' shellcheck

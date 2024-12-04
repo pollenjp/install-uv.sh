@@ -6,7 +6,7 @@ base_dir=${INSTALL_UV_BASE_DIR:-$(pwd)}
 readonly uv_install_dir="${base_dir}/.uv"
 
 usage=$(
-  cat <<__EOS
+  cat << __EOS
 Description: Install uv and generate pycmd
 Usage: "install-uv.sh [options]
 
@@ -18,9 +18,15 @@ __EOS
 
 while getopts hv: OPT; do
   case "$OPT" in
-    h) echo "$usage"; exit 0 ;;
+    h)
+      echo "$usage"
+      exit 0
+      ;;
     v) uv_version=$OPTARG ;;
-    *) echo "Unknown option: -$OPTARG" >&2; exit 1 ;; # 不正なオプション (OPT = ?)
+    *)
+      echo "Unknown option: -$OPTARG" >&2
+      exit 1
+      ;; # 不正なオプション (OPT = ?)
   esac
 done
 shift $((OPTIND - 1))
@@ -36,8 +42,8 @@ if [[ "${uv_version}" == "latest" ]]; then
     exit 1
   fi
   uv_version=$(
-    curl -s  "https://api.github.com/repos/astral-sh/uv/tags" \
-    | jq -r '
+    curl -s "https://api.github.com/repos/astral-sh/uv/tags" \
+      | jq -r '
 map(.name)
 | sort_by(
   # sort by semantic versioning
@@ -60,7 +66,6 @@ map(.name)
   )
 fi
 
-
 skip_download=0
 if [[ -f "${uv_install_dir}/bin/uv" ]]; then
   _uv_version=$("${uv_install_dir}/bin/uv" --version)
@@ -81,7 +86,7 @@ fi
 # 任意のコマンドを pycmd の引数に渡すことでこの環境下で動作する
 #
 
-cat <<'__EOF__' >| "${base_dir}"/pycmd
+cat << '__EOF__' >| "${base_dir}"/pycmd
 #!/usr/bin/env bash
 set -eu -o pipefail -o pipefail
 
@@ -92,14 +97,14 @@ readonly prog_name
 
 declare -a additional_paths=()
 __EOF__
-cat <<__EOF__ >> "${base_dir}/pycmd"
+cat << __EOF__ >> "${base_dir}/pycmd"
 export XDG_CONFIG_HOME="${base_dir}/.config"
 export XDG_CACHE_HOME="${base_dir}/.cache"
 export XDG_DATA_HOME="${base_dir}/.local/share"
 export XDG_BIN_HOME="${base_dir}/.local/bin"
 additional_paths+=( "${uv_install_dir}/bin" )
 __EOF__
-cat <<'__EOF__' >> "${base_dir}/pycmd"
+cat << '__EOF__' >> "${base_dir}/pycmd"
 additional_paths+=( "${XDG_BIN_HOME}" )
 joined_path=$(IFS=:; echo "${additional_paths[*]}")
 export PATH="${joined_path}:$PATH"
