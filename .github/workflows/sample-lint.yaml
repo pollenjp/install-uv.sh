@@ -1,0 +1,9 @@
+name: Sample Lint
+on:
+  pull_request:
+jobs:
+  shellcheck:
+    runs-on: ["ubuntu-latest"]
+    steps:
+      - uses: pollenjp/setup-shellcheck@v1
+      - uses: pollenjp/setup-shellcheck@v1
